@@ -1,13 +1,13 @@
 import React, { Component } from 'react';
 import axios from 'axios';
-import { FormControl, ListGroup, ListGroupItem, PageHeader, Table, Button } from 'react-bootstrap';
+import { FormControl, ListGroup, ListGroupItem, PageHeader, Table } from 'react-bootstrap';
 import trueImage from './true.png';
 import falseImage from './false.png';
 
 class App extends Component {
     constructor(props) {
         super(props);
-        const id = localStorage.getItem("id");
+        const id = window.location.href.split("=")[1];
         this.state = {
             searchedStops: [],
             stopData: null,
@@ -21,7 +21,9 @@ class App extends Component {
         this.searchByName = this.searchByName.bind(this);
         this.handleUseInput = this.handleUseInput.bind(this);
         this.toggleRemember = this.toggleRemember.bind(this);
+    }
 
+    componentDidMount() {
         const fetch = () => {
             if (this.state.remember) {
                 this.getStartsOfStopId(this.state.id);
@@ -44,15 +46,16 @@ class App extends Component {
     }
 
     async getStartsOfStopId(id) {
-        if (this.state.remember) {
-            localStorage.setItem("id", id);
-        }
-        try {
-            this.setState({ stopError: false, id })
-            let response = await axios.get(`getStartsOfStopId/${id}`);
-            this.setState({ stopData: response.data, searchedStops: [] })
-        } catch (error) {
-            this.setState({ stopError: true })
+        if (this.state.remember && this.state.id !== id) {
+            window.location.href = window.location.origin + `?id=${id}`
+        } else {
+            try {
+                this.setState({ stopError: false, id })
+                let response = await axios.get(`getStartsOfStopId/${id}`);
+                this.setState({ stopData: response.data, searchedStops: [] })
+            } catch (error) {
+                this.setState({ stopError: true })
+            }
         }
     }
 
@@ -64,8 +67,7 @@ class App extends Component {
 
     toggleRemember() {
         if (this.state.remember) {
-            localStorage.removeItem("id");
-            this.setState({ remember: false, id: null })
+            window.location.href = window.location.origin;
         } else {
             this.setState({ remember: true })
         }
@@ -76,7 +78,7 @@ class App extends Component {
             <div>
                 <ListGroup>
                     <ListGroupItem
-                        bsStyle={this.state.remember ? "success" : "default"}
+                        bsStyle={this.state.remember ? "success" : undefined}
                         onClick={this.toggleRemember}
                     >
                         Haltestelle merken und aktualisieren
